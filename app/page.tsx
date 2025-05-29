@@ -1,12 +1,11 @@
-
+import "./globals.css";
 export default async function Home() {
-
 
   return (
 
-    <main className='overflow-hidden'>
-      
-      </main>
+    <div className="text-3xl text-sky-500">
+      twitter
+    </div>
   )
 
 }
