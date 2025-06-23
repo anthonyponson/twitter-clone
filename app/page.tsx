@@ -1,9 +1,8 @@
-const Home = () => {
+export default function Home() {
   return (
-    <div className="text-3xl text-sky-500">
+    <section className="space-y-8">
       
-    </div>
-  )
+     hello
+    </section>
+  );
 }
-
-export default Home
