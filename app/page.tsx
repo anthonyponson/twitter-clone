@@ -1,8 +1,8 @@
 export default function Home() {
   return (
-    <section className="space-y-8">
+    <div className="space-y-8">
       
      hello
-    </section>
+    </div>
   );
 }
