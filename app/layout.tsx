@@ -24,6 +24,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-3xl">{children}</div>
+          <div className="fixed inset-x-0 bottom-0 border-t border-gray-700">
+            car4d
+             </div>
         </main>
       </body>
     </html>
