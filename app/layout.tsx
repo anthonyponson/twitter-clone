@@ -1,33 +1,45 @@
-import "./globals.css";
-import { ReactNode } from "react";
-import dynamic from "next/dynamic";
+// src/app/layout.tsx
 
-// Lazy-load Sidebar to split the bundle
-const Sidebar = dynamic(() => import("../components/Sidebar"), {
-  ssr: false,
-});
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import Sidebar from '@/components/Sidebar';
 
-export const metadata = {
-  title: "BirdFeed – A Next.js Twitter Clone",
-  viewport: "width=device-width, initial-scale=1",
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'X Clone',
+  description: 'A modern X clone built with Next.js and TypeScript',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body className="flex h-screen bg-gray-950 text-white font-sans antialiased">
-        {/* Sidebar on desktop; you can later wire up a mobile drawer here */}
-        <div className="hidden lg:block">
+      <body className={`${inter.className} bg-black text-white`}>
+        {/* Main container to center the entire app */}
+        <div className="container mx-auto flex min-h-screen max-w-7xl">
+          {/* 1. Sidebar */}
           <Sidebar />
-        </div>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="mx-auto max-w-3xl">{children}</div>
-          <div className="fixed inset-x-0 bottom-0 border-t border-gray-700">
-            car4d
-             </div>
-        </main>
+          {/* 2. Main Content Feed */}
+          <main className="flex-1 border-x border-neutral-800">
+            {/* The page content will be rendered here */}
+            {children}
+          </main>
+
+          {/* 3. Widgets / Right-hand column (Optional but recommended for layout) */}
+          <aside className="hidden w-[350px] p-4 lg:block">
+            {/* You can add a "What's happening" or "Who to follow" component here later */}
+            <div className="sticky top-0">
+                <h2 className="text-xl font-bold">What's happening</h2>
+                {/* ... more widget content */}
+            </div>
+          </aside>
+        </div>
       </body>
     </html>
   );
