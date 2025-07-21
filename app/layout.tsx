@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
+import Widgets from '@components/Widgets';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -35,6 +36,7 @@ export default function RootLayout({
           <aside className="hidden w-[350px] p-4 lg:block">
             {/* You can add a "What's happening" or "Who to follow" component here later */}
             <div className="sticky top-0">
+              <Widgets/>
                 <h2 className="text-xl font-bold">What's happening</h2>
                 {/* ... more widget content */}
             </div>
