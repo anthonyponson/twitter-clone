@@ -48,7 +48,6 @@ const sidebarLinks: SidebarLinkType[] = [
 
 const Sidebar = () => {
   const pathname = usePathname();
-
   // In a real app, you'd get this from your auth context
   const isAuthenticated = true; 
 

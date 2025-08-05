@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
 import Widgets from '@components/Widgets';
+import AuthProvider from '@/app/auth/AuthProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
