@@ -1,9 +1,14 @@
 // src/components/SidebarLink.tsx
 
 import Link from 'next/link';
-import { type SidebarLinkType } from './Sidebar'; // Import the type
 import clsx from 'clsx';
+// No need to import LucideIcon here anymore, as the type is centralized.
 
+// ============ THE KEY CHANGE IS HERE ============
+import type { SidebarLinkType } from './SidebarItems'; // Import the shared type
+// =============================================
+
+// This interface now extends the shared type, which is robust
 interface SidebarLinkProps extends SidebarLinkType {
   isActive: boolean;
 }
@@ -17,13 +22,11 @@ const SidebarLink = ({ title, href, icon: Icon, isActive }: SidebarLinkProps) =>
       <div className="flex items-center gap-4">
         <Icon
           size={28}
-          // The 'fill' trick for active icons
           className={clsx(isActive && 'fill-white')}
         />
         <span
           className={clsx(
             'hidden text-xl xl:inline',
-            // The 'font-bold' for active text
             isActive && 'font-bold'
           )}
         >

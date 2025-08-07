@@ -4,8 +4,9 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
-import Widgets from '@components/Widgets';
-import AuthProvider from '@/app/auth/AuthProvider';
+import Widgets from '@/components/Widgets';
+// Correct the import path to match where you created the file
+import AuthProvider from '@app/auth/AuthProvider'; 
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,27 +23,25 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-black text-white`}>
-        {/* Main container to center the entire app */}
-        <div className="container mx-auto flex min-h-screen max-w-7xl">
-          {/* 1. Sidebar */}
-          <Sidebar />
+        {/*
+          The AuthProvider MUST wrap the entire application layout.
+          This makes the session context available to all child components.
+        */}
+        <AuthProvider>
+          {/* Main container to center the entire app */}
+          <div className="container mx-auto flex min-h-screen max-w-7xl">
+            {/* 1. Sidebar */}
+            <Sidebar />
 
-          {/* 2. Main Content Feed */}
-          <main className="flex-1 border-x border-neutral-800">
-            {/* The page content will be rendered here */}
-            {children}
-          </main>
+            {/* 2. Main Content Feed */}
+            <main className="w-full max-w-[600px] border-x border-neutral-800">
+              {children}
+            </main>
 
-          {/* 3. Widgets / Right-hand column (Optional but recommended for layout) */}
-          <aside className="hidden w-[350px] p-4 lg:block">
-            {/* You can add a "What's happening" or "Who to follow" component here later */}
-            <div className="sticky top-0">
-              <Widgets/>
-                <h2 className="text-xl font-bold">What's happening</h2>
-                {/* ... more widget content */}
-            </div>
-          </aside>
-        </div>
+            {/* 3. Widgets Column */}
+            <Widgets />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
