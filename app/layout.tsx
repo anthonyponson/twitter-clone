@@ -6,7 +6,7 @@ import './globals.css';
 import Sidebar from '@/components/Sidebar';
 import Widgets from '@/components/Widgets';
 // Correct the import path to match where you created the file
-import AuthProvider from '@app/auth/AuthProvider'; 
+import AuthProvider from '@components/AuthProvider'; 
 
 const inter = Inter({ subsets: ['latin'] });
 

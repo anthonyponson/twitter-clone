@@ -1,8 +1,17 @@
+// next.config.mjs
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: {
-        domains: ["cdn.imagin.studio"]
-    }
-}
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+};
 
-module.exports = nextConfig
+export default nextConfig;
