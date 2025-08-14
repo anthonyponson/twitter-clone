@@ -12,6 +12,7 @@
     "@auth/mongodb-adapter": "^3.10.0",
     "@headlessui/react": "^1.7.14",
     "@heroicons/react": "^2.2.0",
+    "@radix-ui/react-popover": "^1.1.15",
     "@types/node": "20.2.1",
     "@types/react": "18.2.6",
     "@types/react-dom": "18.2.4",
