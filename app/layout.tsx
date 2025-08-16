@@ -3,10 +3,11 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+
+// Import all necessary components
 import Sidebar from '@/components/Sidebar';
 import Widgets from '@/components/Widgets';
-// Correct the import path to match where you created the file
-import AuthProvider from '@components/AuthProvider'; 
+import AuthProvider from '@/components/AuthProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -24,22 +25,31 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-black text-white`}>
         {/*
-          The AuthProvider MUST wrap the entire application layout.
-          This makes the session context available to all child components.
+          The AuthProvider MUST wrap everything to make the session
+          available globally to all components.
         */}
         <AuthProvider>
-          {/* Main container to center the entire app */}
+          {/*
+            This main container centers the entire app on larger screens.
+            It's a flex container for the three columns.
+          */}
           <div className="container mx-auto flex min-h-screen max-w-7xl">
-            {/* 1. Sidebar */}
+            
+            {/* Column 1: The main Sidebar */}
             <Sidebar />
 
-            {/* 2. Main Content Feed */}
+            {/*
+              Column 2: The main content feed.
+              'children' will be your home page (page.tsx) or other pages
+              like /explore, /notifications, etc.
+            */}
             <main className="w-full max-w-[600px] border-x border-neutral-800">
               {children}
             </main>
 
-            {/* 3. Widgets Column */}
+            {/* Column 3: The Widgets section on the right */}
             <Widgets />
+            
           </div>
         </AuthProvider>
       </body>

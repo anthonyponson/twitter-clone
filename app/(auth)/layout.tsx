@@ -5,8 +5,10 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // This layout is minimal, with no Sidebar or Widgets.
+  // It applies only to pages inside the (auth) group, like /login and /register.
   return (
-    <div className="flex h-screen items-center justify-center bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-black">
       {children}
     </div>
   );
