@@ -6,21 +6,17 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from '@app/lib/Mongodb';
+import dbConnect from '@app/lib/mongoose';
 import User from '@app/model/User';
 import bcrypt from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
-  // 1. ADAPTER
-  // Use the MongoDBAdapter to connect Auth.js to your database.
-  // It will automatically handle user creation, session management, etc.
   adapter: MongoDBAdapter(clientPromise),
-
-  // 2. PROVIDERS
-  // An array of authentication providers.
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: 'Credentials',
@@ -28,62 +24,68 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
-      // The authorize function is where you handle the login logic for credentials.
       async authorize(credentials) {
-        // Basic validation
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Missing credentials');
-        }
-
-        // Ensure the database connection is ready
-        await clientPromise;
+        // ============= START DEBUGGING =============
+        console.log("--- Authorize Function Started ---");
         
-        // Find the user in your database by their email
-        const user = await User.findOne({ email: credentials.email });
-
-        // If no user is found OR if the user was created via OAuth (no password), reject login
-        if (!user || !user.password) {
-          throw new Error('Invalid credentials');
+        if (!credentials?.email || !credentials?.password) {
+          console.log("DEBUG: Missing credentials.");
+          return null;
         }
+        
+        console.log(`DEBUG: Attempting to log in with email: ${credentials.email}`);
 
-        // Compare the provided password with the hashed password in the database
-        const isPasswordCorrect = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        try {
+          await dbConnect();
+          console.log("DEBUG: Database connected.");
 
-        if (!isPasswordCorrect) {
-          throw new Error('Invalid credentials');
+          const user = await User.findOne({ email: credentials.email });
+
+          if (!user) {
+            console.log("DEBUG: No user found with that email.");
+            return null;
+          }
+          console.log("DEBUG: User found in DB:", user);
+
+          if (!user.password) {
+            console.log("DEBUG: User found, but they have no password (likely an OAuth account).");
+            return null;
+          }
+          console.log("DEBUG: User has a password hash in the DB.");
+          
+          console.log(`DEBUG: Comparing submitted password "${credentials.password}" with stored hash "${user.password}"`);
+
+          const passwordsMatch = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+          
+          console.log(`DEBUG: bcrypt.compare result: ${passwordsMatch}`);
+          
+          if (!passwordsMatch) {
+            console.log("DEBUG: Passwords do not match.");
+            return null;
+          }
+          
+          console.log("--- Authorization Successful! ---");
+          return user;
+
+        } catch (error) {
+          console.log("DEBUG: An error occurred in the authorize function:", error);
+          return null;
         }
-
-        // If everything is correct, return the user object
-        return user;
+        // ============= END DEBUGGING =============
       },
     }),
   ],
-
-  // 3. SESSION STRATEGY
-  // Use JSON Web Tokens for session management.
   session: {
     strategy: 'jwt',
   },
-
-  // 4. SECRET
-  // A secret key for signing JWTs, read from your .env.local file.
-  // This is mandatory for production.
   secret: process.env.AUTH_SECRET,
-  
-  // 5. PAGES
-  // This is the crucial part that tells Auth.js to use your custom login page
-  // instead of its default, auto-generated one.
   pages: {
     signIn: '/login',
-    // You can also specify other pages like signOut, error, verifyRequest, etc.
-    // error: '/auth/error', 
   },
 };
 
-// This creates the handler for the catch-all API route.
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
