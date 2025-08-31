@@ -5,7 +5,7 @@ import type { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import clientPromise from '@app/lib/mongodb';
+import clientPromise from "@app/lib/mongodb";
 import dbConnect from '@app/lib/mongoose';
 import User from '@app/model/User';
 import bcrypt from 'bcryptjs';
@@ -25,67 +25,47 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        // ============= START DEBUGGING =============
-        console.log("--- Authorize Function Started ---");
+        await dbConnect();
+        if (!credentials?.email || !credentials?.password) return null;
         
-        if (!credentials?.email || !credentials?.password) {
-          console.log("DEBUG: Missing credentials.");
-          return null;
-        }
+        const user = await User.findOne({ email: credentials.email });
+        if (!user || !user.password) return null;
         
-        console.log(`DEBUG: Attempting to log in with email: ${credentials.email}`);
-
-        try {
-          await dbConnect();
-          console.log("DEBUG: Database connected.");
-
-          const user = await User.findOne({ email: credentials.email });
-
-          if (!user) {
-            console.log("DEBUG: No user found with that email.");
-            return null;
-          }
-          console.log("DEBUG: User found in DB:", user);
-
-          if (!user.password) {
-            console.log("DEBUG: User found, but they have no password (likely an OAuth account).");
-            return null;
-          }
-          console.log("DEBUG: User has a password hash in the DB.");
-          
-          console.log(`DEBUG: Comparing submitted password "${credentials.password}" with stored hash "${user.password}"`);
-
-          const passwordsMatch = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-          
-          console.log(`DEBUG: bcrypt.compare result: ${passwordsMatch}`);
-          
-          if (!passwordsMatch) {
-            console.log("DEBUG: Passwords do not match.");
-            return null;
-          }
-          
-          console.log("--- Authorization Successful! ---");
-          return user;
-
-        } catch (error) {
-          console.log("DEBUG: An error occurred in the authorize function:", error);
-          return null;
-        }
-        // ============= END DEBUGGING =============
+        const passwordsMatch = await bcrypt.compare(credentials.password, user.password);
+        if (!passwordsMatch) return null;
+        
+        return user;
       },
     }),
   ],
+  
+  // =================== CRITICAL SECTION ===================
+  // Ensure the session strategy is JWT and the secret is explicitly set.
   session: {
     strategy: 'jwt',
   },
   secret: process.env.AUTH_SECRET,
+  // ========================================================
+  
   pages: {
     signIn: '/login',
+  },
+  callbacks: {
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.sub as string;
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
   },
 };
 
 const handler = NextAuth(authOptions);
+
 export { handler as GET, handler as POST };
