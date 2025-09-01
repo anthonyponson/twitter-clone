@@ -1,5 +1,4 @@
 // src/app/api/auth/[...nextauth]/route.ts
-
 import NextAuth from 'next-auth';
 import type { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
@@ -38,32 +37,43 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  
-  // =================== CRITICAL SECTION ===================
-  // Ensure the session strategy is JWT and the secret is explicitly set.
+
   session: {
     strategy: 'jwt',
   },
   secret: process.env.AUTH_SECRET,
-  // ========================================================
-  
+
   pages: {
     signIn: '/login',
   },
+
   callbacks: {
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.sub as string;
-      }
-      return session;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id;
-      }
-      return token;
-    },
+  async session({ session, token }) {
+    if (!session.user || !token.sub) return session;
+
+    await dbConnect();
+    const dbUser = await User.findById(token.sub)
+      .select("_id name email image")
+      .lean();
+
+    if (dbUser) {
+      session.user.id = dbUser._id.toString();
+      session.user.name = dbUser.name || null;
+      session.user.email = dbUser.email;
+      session.user.image = dbUser.image || null;
+    }
+
+    return session;
   },
+
+  async jwt({ token, user }) {
+    if (user) {
+      token.sub = user.id;
+    }
+    return token;
+  },
+},
+
 };
 
 const handler = NextAuth(authOptions);
