@@ -6,20 +6,19 @@ const nextConfig = {
     remotePatterns: [
       // For Google profile pictures
       {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        port: "",
+        pathname: "/**",
       },
       // For UploadThing images
       {
-        protocol: 'https',
-        hostname: 'utfs.io',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "utfs.io",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
-};
-
-module.exports = nextConfig;
+}
+module.exports = nextConfig
