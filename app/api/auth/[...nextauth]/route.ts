@@ -1,4 +1,5 @@
 // src/app/api/auth/[...nextauth]/route.ts
+
 import NextAuth from 'next-auth';
 import type { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
@@ -37,43 +38,53 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-
   session: {
     strategy: 'jwt',
   },
   secret: process.env.AUTH_SECRET,
-
   pages: {
     signIn: '/login',
   },
 
+  // ============= THIS IS THE FINAL, CORRECT CALLBACKS LOGIC =============
   callbacks: {
-  async session({ session, token }) {
-    if (!session.user || !token.sub) return session;
+    async jwt({ token, user, trigger, session }) {
+      // 1. On initial sign-in, the `user` object is available.
+      // We persist the user's ID, name, email, and image to the token.
+      if (user) {
+        token.sub = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.picture = user.image;
+      }
 
-    await dbConnect();
-    const dbUser = await User.findById(token.sub)
-      .select("_id name email image")
-      .lean();
-
-    if (dbUser) {
-      session.user.id = dbUser._id.toString();
-      session.user.name = dbUser.name || null;
-      session.user.email = dbUser.email;
-      session.user.image = dbUser.image || null;
-    }
-
-    return session;
+      // 2. If the session is updated (e.g., profile picture change),
+      // we refetch the user from the database to get the latest data.
+      if (trigger === "update") {
+        const refreshedUser = await User.findById(token.sub);
+        if (refreshedUser) {
+          token.name = refreshedUser.name;
+          token.picture = refreshedUser.image;
+        }
+      }
+      
+      return token;
+    },
+    
+    async session({ session, token }) {
+      // 3. This callback runs for every session check.
+      // We take the data from the token and apply it to the session object.
+      // NO DATABASE CALLS ARE MADE HERE. It's fast and efficient.
+      if (token && session.user) {
+        session.user.id = token.sub;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.picture;
+      }
+      return session;
+    },
   },
-
-  async jwt({ token, user }) {
-    if (user) {
-      token.sub = user.id;
-    }
-    return token;
-  },
-},
-
+  // ====================================================================
 };
 
 const handler = NextAuth(authOptions);

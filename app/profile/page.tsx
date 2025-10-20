@@ -43,7 +43,9 @@ export default function ProfilePage() {
 
         <div className="flex flex-col items-center gap-2">
             <p className="font-semibold text-neutral-400">Upload a New Picture</p>
+
             <UploadButton<OurFileRouter>
+              
               endpoint="profilePictureUploader"
               onClientUploadComplete={async (res) => {
                 if (res && res.length > 0) {
