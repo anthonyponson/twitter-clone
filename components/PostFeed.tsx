@@ -1,31 +1,20 @@
 // src/components/PostFeed.tsx
+"use client";
+
+import useSWR from 'swr';
 import { HydratedIPost } from '@app/model/Post';
 import PostItem from './Postitem';
 
-// Helper function to fetch posts
-async function getPosts(): Promise<HydratedIPost[]> {
-  try {
-    // In server components, you should use the full URL
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/posts`, {
-      // This ensures we always get the latest posts
-      cache: 'no-store', 
-    });
+// Define a fetcher function for SWR
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
-    if (!res.ok) {
-      return [];
-    }
-    return res.json();
-  } catch (error) {
-    console.error("Failed to fetch posts:", error);
-    return [];
-  }
-}
+const PostFeed = () => {
+  // Use the SWR hook to fetch and manage posts
+  const { data: posts, error, isLoading } = useSWR<HydratedIPost[]>('/api/posts', fetcher);
 
-const PostFeed = async () => {
-  const posts = await getPosts();
-
-  if (posts.length === 0) {
+  if (isLoading) return <p className="p-4 text-center">Loading feed...</p>;
+  if (error) return <p className="p-4 text-center text-red-500">Failed to load feed.</p>;
+  if (!posts || posts.length === 0) {
     return <p className="p-4 text-center text-neutral-500">No posts yet. Be the first!</p>;
   }
 
