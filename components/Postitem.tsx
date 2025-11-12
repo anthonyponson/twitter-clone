@@ -7,6 +7,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { MessageCircle, Repeat, Share } from 'lucide-react';
 import { HydratedIPost } from '@app/model/Post';
 import { LikeButton } from './LikeButton'; // Import the new component
+import { CommentModal } from './CommentModal';
 
 interface PostItemProps {
   post: HydratedIPost;
@@ -21,7 +22,12 @@ const PostItem = ({ post }: PostItemProps) => {
     <div className="flex gap-4 border-b border-neutral-800 p-4">
       {/* ... Avatar and Post content ... */}
       <div className="mt-3 flex items-center justify-between text-neutral-500">
-        <button className="group flex ..."><MessageCircle size={18} /><span>{post.comments.length}</span></button>
+         <CommentModal post={post}>
+        <button className="group flex items-center gap-2">
+          <MessageCircle size={18} className="transition-colors group-hover:text-sky-500"/>
+          <span className="text-sm transition-colors group-hover:text-sky-500">{post.comments.length}</span>
+        </button>
+      </CommentModal>
         <button className="group flex ..."><Repeat size={18} /><span>{post.repostedBy.length}</span></button>
         
         {/* Replace the old button with the new component */}
