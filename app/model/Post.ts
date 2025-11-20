@@ -5,53 +5,41 @@ import { User } from 'next-auth';
 
 // Interface representing a document in MongoDB.
 export interface IPost extends Document {
-  content: string;
+  content: string | null; // <-- Now optional
   author: Schema.Types.ObjectId | User;
-  parentPost?: Schema.Types.ObjectId; // For comments
-  comments: Schema.Types.ObjectId[]; // Array of comment post IDs
-  likes: Schema.Types.ObjectId[]; // Array of user IDs
-  repostedBy: Schema.Types.ObjectId[]; // Array of user IDs
+  parentPost?: Schema.Types.ObjectId;
+  comments: Schema.Types.ObjectId[];
+  likes: Schema.Types.ObjectId[];
+  repostedBy: Schema.Types.ObjectId[];
+  originalPost?: Schema.Types.ObjectId; // <-- NEW FIELD for retweets/quotes
   createdAt: Date;
   updatedAt: Date;
 }
 
-// A version of the interface for when author/comments are populated
-export interface HydratedIPost extends Omit<IPost, 'author' | 'comments'> {
-  author: User; // Author is now a full User object
-  comments: IPost[]; // Comments are now full Post objects
+// A version of the interface for when fields are populated
+export interface HydratedIPost extends Omit<IPost, 'author' | 'comments' | 'originalPost'> {
+  author: User;
+  comments: IPost[];
+  originalPost?: HydratedIPost; // <-- NEW FIELD (can be recursive)
 }
 
 const PostSchema = new Schema<IPost>({
   content: {
     type: String,
-    required: [true, 'Post content is required.'],
     trim: true,
     maxlength: [280, 'Post cannot be more than 280 characters.'],
+    default: null, // <-- Changed from required to default null
   },
-  author: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  // --- NEW FIELDS ---
-  parentPost: {
+  author: { /* ... */ },
+  parentPost: { /* ... */ },
+  comments: [{ /* ... */ }],
+  likes: [{ /* ... */ }],
+  repostedBy: [{ /* ... */ }],
+  originalPost: { // <-- NEW FIELD DEFINITION
     type: Schema.Types.ObjectId,
     ref: 'Post',
     default: null,
   },
-  comments: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Post'
-  }],
-  likes: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  repostedBy: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  // --- END NEW FIELDS ---
 }, { timestamps: true });
 
 const Post = models.Post || model<IPost>('Post', PostSchema);
