@@ -48,9 +48,23 @@ export async function GET() {
     await dbConnect();
 
     const posts = await Post.find({})
-      .populate('author', 'name email image') // Populate author with specific fields
-      .sort({ createdAt: -1 }) // Sort by newest first
-      .limit(50); // Limit to the latest 50 posts
+      // Populate the top-level author
+      .populate({
+        path: 'author',
+        select: 'name email image'
+      })
+      // ============ THIS IS THE FIX ============
+      // Populate the nested originalPost and ITS author
+      .populate({
+        path: 'originalPost',
+        populate: {
+          path: 'author',
+          select: 'name email image'
+        }
+      })
+      // ===========================================
+      .sort({ createdAt: -1 })
+      .limit(50);
 
     return NextResponse.json(posts, { status: 200 });
   } catch (error) {
