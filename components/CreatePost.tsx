@@ -4,11 +4,10 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { ImageIcon, FileBox, List, Smile } from 'lucide-react';
-import clsx from 'clsx';
+// ... other imports
 
-const CreatePost = () => {
+// Accept the new parentPostId prop
+const CreatePost = ({ parentPostId }: { parentPostId?: string }) => {
   const { data: session } = useSession();
   const router = useRouter();
   const [content, setContent] = useState('');
@@ -19,63 +18,43 @@ const CreatePost = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/posts', {
+      // Determine the correct API endpoint
+      const endpoint = parentPostId 
+        ? `/api/posts/${parentPostId}/comment`
+        : '/api/posts';
+        
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create post');
-      }
+      if (!response.ok) throw new Error('Failed to post');
 
-      setContent(''); // Clear input on success
-      router.refresh(); // This is the Next.js 13+ way to refresh server data
+      setContent('');
+      router.refresh(); // Refresh data on the current page
     } catch (error) {
       console.error(error);
-      alert((error as Error).message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!session) return null; // Don't show the composer if not logged in
+  if (!session) return null;
 
   return (
     <div className="flex gap-4 border-b border-neutral-800 p-4">
-      <Image
-        src={session.user?.image || '/default-avatar.png'}
-        alt="User avatar"
-        width={40} height={40} className="h-10 w-10 rounded-full"
-      />
+      {/* ... Avatar ... */}
       <div className="flex-1">
         <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="What's happening?"
-          className="w-full resize-none bg-transparent text-xl placeholder-neutral-500 focus:outline-none"
-          rows={2} maxLength={280}
+          // Change placeholder based on whether it's a reply
+          placeholder={parentPostId ? "Post your reply" : "What's happening?"}
+          // ... rest of textarea props
         />
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex gap-1 text-sky-500">
-            <ImageIcon size={20} className="cursor-pointer" />
-            <FileBox size={20} className="cursor-pointer" />
-            <List size={20} className="cursor-pointer" />
-            <Smile size={20} className="cursor-pointer" />
-          </div>
-          <button
-            onClick={handlePost}
-            disabled={!content.trim() || isSubmitting}
-            className={clsx(
-              'rounded-full px-4 py-1.5 font-bold text-white transition-all duration-200',
-              {
-                'bg-sky-500 hover:bg-sky-600': content.trim() && !isSubmitting,
-                'cursor-not-allowed bg-sky-900 text-neutral-500': !content.trim() || isSubmitting,
-              }
-            )}
-          >
-            {isSubmitting ? 'Posting...' : 'Post'}
+        <div className="mt-4 flex items-center justify-end">
+          {/* Change button text based on whether it's a reply */}
+          <button onClick={handlePost} disabled={!content.trim() || isSubmitting} /* ... */>
+            {isSubmitting ? '...' : (parentPostId ? 'Reply' : 'Post')}
           </button>
         </div>
       </div>
