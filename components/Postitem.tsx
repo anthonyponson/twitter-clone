@@ -26,24 +26,20 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
   }
 
   const isRetweet = post.originalPost && !post.content;
-  
   const displayPost = isRetweet ? post.originalPost! : post;
 
-  // ============ THIS IS THE LINE WITH THE FIX ============
-  // Changed `display-post` to `displayPost`
   if (!displayPost || !displayPost.author) {
     return null;
   }
-  // =======================================================
   
-  const hasLiked = session ? displayPost.likes.includes(session.user.id as any) : false;
+  const hasLiked = session ? displayPost.likes.includes(session.user.id) : false;
 
   return (
     <div className={clsx("flex gap-4 p-4", {
       "border-b border-neutral-800": !isMainPost && !isEmbedded
     })}>
       <div className="flex flex-col items-center w-10 flex-shrink-0">
-        <Link href={`/post/${displayPost._id}`} className="cursor-pointer">
+        <Link href={`/profile/${displayPost.author?.name}`}>
             <Image
               src={displayPost.author?.image || '/default-avatar.png'}
               alt={`${displayPost.author?.name || 'Unknown User'}'s avatar`}
@@ -59,7 +55,9 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
           </div>
         )}
 
+        {/* ============ THIS IS THE FIX ============ */}
         <Link href={`/post/${displayPost._id}`} className="cursor-pointer">
+        {/* ========================================= */}
           <div className="flex items-center gap-2">
             <p className="font-bold hover:underline">{displayPost.author?.name || 'Unknown User'}</p>
             <p className="text-sm text-neutral-500">@{displayPost.author?.email?.split('@')[0] || 'unknown'}</p>
@@ -94,11 +92,10 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
             <RepostButton post={displayPost} />
 
             <LikeButton 
-          
-          postId={displayPost._id} 
-          initialLikes={displayPost.likes}
-          initialHasLiked={hasLiked}
-        />
+              postId={displayPost._id}
+              initialLikes={displayPost.likes}
+              initialHasLiked={hasLiked}
+            />
             
             <button className="group">
               <Share size={18} className="transition-colors group-hover:text-sky-500" />
