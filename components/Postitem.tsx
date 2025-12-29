@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { MessageCircle, Share } from 'lucide-react';
+import { MessageCircle, Repeat, Share } from 'lucide-react';
 import clsx from 'clsx';
 import { HydratedIPost } from '@/app/model/Post';
 import { LikeButton } from './LikeButton';
@@ -35,10 +35,11 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
   const hasLiked = session ? displayPost.likes.includes(session.user.id) : false;
 
   return (
-    <div className={clsx("flex gap-4 p-4", {
+    <div className={clsx("flex gap-3 p-4", {
       "border-b border-neutral-800": !isMainPost && !isEmbedded
     })}>
-      <div className="flex flex-col items-center w-10 flex-shrink-0">
+      <div className="flex flex-col items-end w-10 flex-shrink-0">
+        {isRetweet && <Repeat size={14} className="text-neutral-500 mb-1" />}
         <Link href={`/profile/${displayPost.author?.name}`}>
             <Image
               src={displayPost.author?.image || '/default-avatar.png'}
@@ -50,23 +51,21 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
       
       <div className="flex-1">
         {isRetweet && (
-          <div className="mb-2 flex items-center gap-2 text-sm text-neutral-500 font-semibold">
-            <p>{post.author.name} reposted</p>
+          <div className="mb-1 text-sm text-neutral-500 font-semibold">
+            <Link href={`/profile/${post.author.name}`} className="hover:underline">{post.author.name} reposted</Link>
           </div>
         )}
 
-        {/* ============ THIS IS THE FIX ============ */}
-        <Link href={`/post/${displayPost._id}`} className="cursor-pointer">
-        {/* ========================================= */}
-          <div className="flex items-center gap-2">
-            <p className="font-bold hover:underline">{displayPost.author?.name || 'Unknown User'}</p>
-            <p className="text-sm text-neutral-500">@{displayPost.author?.email?.split('@')[0] || 'unknown'}</p>
-            <span className="text-sm text-neutral-500">·</span>
-            <p className="text-sm text-neutral-500 hover:underline">
-              {formatDistanceToNowStrict(new Date(displayPost.createdAt))} ago
-            </p>
-          </div>
+        <div className="flex items-center gap-2">
+          <Link href={`/profile/${displayPost.author.name}`} className="font-bold hover:underline">{displayPost.author?.name || 'Unknown User'}</Link>
+          <p className="text-sm text-neutral-500">@{displayPost.author?.email?.split('@')[0] || 'unknown'}</p>
+          <span className="text-sm text-neutral-500">·</span>
+          <Link href={`/post/${displayPost._id}`} className="text-sm text-neutral-500 hover:underline">
+            {formatDistanceToNowStrict(new Date(displayPost.createdAt))} ago
+          </Link>
+        </div>
           
+        <Link href={`/post/${displayPost._id}`} className="cursor-pointer">
           {post.content && (
             <p className={clsx("mt-1 whitespace-pre-wrap", { "text-xl": isMainPost })}>
               {post.content}
