@@ -18,48 +18,71 @@ export async function POST(request: Request, { params }: { params: Params }) {
   }
 
   const { postId } = params;
-  const body = (await request.json().catch(() => ({}))) as { content?: string };
+  const userId = session.user.id;
+  const { content } = (await request.json().catch(() => ({}))) as { content?: string };
 
   try {
     await dbConnect();
     
-    const originalPost = await Post.findById(postId);
-    if (!originalPost) {
-      return NextResponse.json({ error: 'Original post not found' }, { status: 404 });
+    // If it's a quote tweet, always create a new post.
+    if (content) {
+      const newQuotePost = await Post.create({
+        author: userId,
+        originalPost: postId,
+        content: content,
+      });
+      await Post.findByIdAndUpdate(postId, { $addToSet: { repostedBy: userId } });
+      const populatedPost = await Post.findById(newQuotePost._id).populate(/*...population logic...*/);
+      return NextResponse.json(populatedPost, { status: 201 });
     }
 
-    const newPost = await Post.create({
-      author: session.user.id,
+    // --- THIS IS THE NEW UNDO REPOST LOGIC ---
+    // Check if a simple repost from this user for this post already exists.
+    const existingRepost = await Post.findOne({
+      author: userId,
       originalPost: postId,
-      content: body.content || null,
+      content: null, // Ensure it's a simple repost, not a quote
     });
 
-    await Post.findByIdAndUpdate(postId, {
-      $addToSet: { repostedBy: session.user.id },
-    });
+    if (existingRepost) {
+      // If it exists, UNDO the repost.
+      // 1. Delete the repost document itself.
+      await Post.findByIdAndDelete(existingRepost._id);
 
-    // ============= THIS IS THE CRITICAL FIX =============
-    // We must populate all the necessary data before sending the new post back.
-    const populatedNewPost = await Post.findById(newPost._id)
-      .populate({
-        path: 'author',
-        model: User,
-        select: 'name email image'
-      })
-      .populate({
-        path: 'originalPost',
-        model: Post,
-        populate: {
-          path: 'author',
-          model: User,
-          select: 'name email image'
-        }
+      // 2. Remove the user's ID from the original post's `repostedBy` array.
+      await Post.findByIdAndUpdate(postId, {
+        $pull: { repostedBy: userId },
       });
-    // ====================================================
 
-    return NextResponse.json(populatedNewPost, { status: 201 });
+      return NextResponse.json({ message: 'Repost undone successfully.' }, { status: 200 });
+
+    } else {
+      // If it does NOT exist, CREATE the repost.
+      // This is the original logic.
+      const newRepost = await Post.create({
+        author: userId,
+        originalPost: postId,
+        content: null,
+      });
+
+      await Post.findByIdAndUpdate(postId, {
+        $addToSet: { repostedBy: userId },
+      });
+
+      const populatedNewPost = await Post.findById(newRepost._id)
+        .populate({ path: 'author', model: User, select: 'name email image' })
+        .populate({
+          path: 'originalPost',
+          model: Post,
+          populate: { path: 'author', model: User, select: 'name email image' }
+        });
+
+      return NextResponse.json(populatedNewPost, { status: 201 });
+    }
+    // --- END OF NEW LOGIC ---
+
   } catch (error) {
-    console.error("Error reposting:", error);
+    console.error("Error handling repost:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
