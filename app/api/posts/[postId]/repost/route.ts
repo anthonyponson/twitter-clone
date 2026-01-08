@@ -32,7 +32,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
         content: content,
       });
       await Post.findByIdAndUpdate(postId, { $addToSet: { repostedBy: userId } });
-      const populatedPost = await Post.findById(newQuotePost._id).populate(/*...population logic...*/);
+      const populatedPost = await Post.findById(newQuotePost._id).populate({ path: 'author', model: User, select: 'name email image' });
       return NextResponse.json(populatedPost, { status: 201 });
     }
 
