@@ -6,29 +6,36 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { MoreHorizontal, Trash2, Edit } from 'lucide-react';
 import { mutate } from 'swr';
 import { HydratedIPost } from "@/app/model/Post";
+import { useConfirmationStore } from "@/store/confirmationstore"; // <-- IMPORT THE STORE HOOK
 
 interface PostActionsMenuProps {
   post: HydratedIPost;
-  onEdit: () => void; // Function to trigger edit mode in the parent
+  onEdit: () => void;
 }
 
 export const PostActionsMenu = ({ post, onEdit }: PostActionsMenuProps) => {
   const { data: session } = useSession();
+  const confirm = useConfirmationStore((state) => state.show); // <-- GET THE 'show' FUNCTION
 
-  // Check if the current user is the author of the post
   const isOwner = session?.user?.id === post.author?._id;
 
-  // If not the owner, don't render anything
   if (!isOwner) {
     return null;
   }
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this post?")) {
-      return;
+    // --- REPLACE window.confirm WITH OUR CUSTOM HOOK ---
+    const confirmed = await confirm({
+      title: 'Delete Post?',
+      description: 'This can’t be undone and it will be removed from your profile, the timeline of any accounts that follow you, and from search results.',
+      confirmText: 'Delete',
+    });
+
+    if (confirmed) {
+      await fetch(`/api/posts/${post._id}`, { method: 'DELETE' });
+      mutate('/api/posts');
     }
-    await fetch(`/api/posts/${post._id}`, { method: 'DELETE' });
-    mutate('/api/posts'); // Revalidate the feed
+    // ---------------------------------------------------
   };
 
   return (
@@ -40,16 +47,10 @@ export const PostActionsMenu = ({ post, onEdit }: PostActionsMenuProps) => {
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content className="min-w-[180px] rounded-lg bg-black p-1.5 shadow-lg border border-neutral-800 z-10" sideOffset={5} align="end">
-          <DropdownMenu.Item
-            onSelect={onEdit}
-            className="flex items-center gap-3 p-3 text-sm font-bold cursor-pointer rounded-md hover:bg-neutral-900 focus:outline-none"
-          >
+          <DropdownMenu.Item onSelect={onEdit} /* ... */ >
             <Edit size={16} /> Edit
           </DropdownMenu.Item>
-          <DropdownMenu.Item
-            onSelect={handleDelete}
-            className="flex items-center gap-3 p-3 text-sm font-bold text-red-500 cursor-pointer rounded-md hover:bg-neutral-900 focus:outline-none"
-          >
+          <DropdownMenu.Item onSelect={handleDelete} /* ... */ >
             <Trash2 size={16} /> Delete
           </DropdownMenu.Item>
         </DropdownMenu.Content>
