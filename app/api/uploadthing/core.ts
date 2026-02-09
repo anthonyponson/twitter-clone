@@ -26,6 +26,21 @@ export const ourFileRouter = {
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { uploadedBy: metadata.userId, url: file.url }
     }),
+
+
+
+    postImageUploader: f({ image: { maxFileSize: "8MB", maxFileCount: 1 } })
+    // All post images must be uploaded by a logged-in user
+    .middleware(async ({ req }) => {
+      const session = await getServerSession(authOptions);
+      if (!session) throw new Error("Unauthorized");
+      return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Post Image Upload complete for userId:", metadata.userId);
+      return { uploadedBy: metadata.userId, url: file.url };
+    }),
+
 } satisfies FileRouter
 
 export type OurFileRouter = typeof ourFileRouter

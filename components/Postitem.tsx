@@ -9,16 +9,17 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { MessageCircle, Repeat, Share } from 'lucide-react';
 import clsx from 'clsx';
 import { mutate } from 'swr';
-import { HydratedIPost } from '@/app/model/Post';
+import { HydratedIPost } from '@/app/model/Post'; // Using your corrected path
 import { LikeButton } from './LikeButton';
 import { RepostButton } from './RepostButton';
 import { CommentModal } from './CommentModal';
 import { PostActionsMenu } from './PostActionMenu';
 
+// Define the complete props for this component
 interface PostItemProps {
   post: HydratedIPost;
-  isEmbedded?: boolean;
-  isMainPost?: boolean;
+  isEmbedded?: boolean; // Is this post rendered inside another post (like a quote tweet)?
+  isMainPost?: boolean;  // Is this the main, focused post on a detail page?
 }
 
 const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProps) => {
@@ -26,16 +27,21 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
   
   // State for managing edit mode
   const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState(post.content || '');
+  const [editedContent, setEditedContent] = useState(post?.content || '');
 
-  // Defensive checks to prevent crashes
-  if (!post || !post.author) return null; 
+  // Defensive check: If the post or its author is missing, render nothing to prevent crashes.
+  if (!post || !post.author) {
+    return null; 
+  }
 
-  // Determine post type and which post to display
+  // Determine post type and which post's data to display
   const isRetweet = post.originalPost && !post.content;
-  const displayPost = isRetweet ? post.originalPost! : post;
+  const displayPost = isRetweet ? post.originalPost : post;
 
-  if (!displayPost || !displayPost.author) return null;
+  // Another defensive check in case the originalPost data is malformed
+  if (!displayPost || !displayPost.author) {
+    return null;
+  }
   
   // Calculate interaction states for the current user
   const hasLiked = session ? displayPost.likes.includes(session.user.id) : false;
@@ -66,7 +72,7 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
             <Image
               src={displayPost.author?.image || '/default-avatar.png'}
               alt={`${displayPost.author?.name || 'Unknown User'}'s avatar`}
-              width={40} height={40} className="h-10 w-10 rounded-full cursor-pointer"
+              width={40} height={40} className="h-10 w-10 rounded-full cursor-pointer object-cover"
             />
         </Link>
       </div>
@@ -106,13 +112,28 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
         ) : (
           <div>
             <Link href={`/post/${displayPost._id}`} className="cursor-pointer">
+              {/* Render the post's own content (for normal posts and quote tweets) */}
               {post.content && (
                 <p className={clsx("mt-1 whitespace-pre-wrap", { "text-xl": isMainPost })}>
                   {post.content}
                 </p>
               )}
             </Link>
+            
+            {/* Render the post's image, if it has one */}
+            {displayPost.image && (
+              <Link href={`/post/${displayPost._id}`} className="mt-2 block">
+                <Image
+                  src={displayPost.image}
+                  alt="Post image"
+                  width={500}
+                  height={500}
+                  className="w-full h-auto rounded-xl border border-neutral-800"
+                />
+              </Link>
+            )}
 
+            {/* If it's a Quote Tweet, render the original post embedded inside */}
             {post.originalPost && post.content && (
               <div className="mt-2 rounded-xl border border-neutral-800 hover:bg-neutral-900/50 transition-colors">
                 <PostItem post={post.originalPost} isEmbedded />
@@ -121,7 +142,7 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
           </div>
         )}
         
-        {/* Action Buttons: Only show if not embedded and not in edit mode */}
+        {/* Action Buttons: Only show if not an embedded post and not in edit mode */}
         {!isEmbedded && !isEditing && (
           <div className="mt-3 flex items-center justify-between text-neutral-500 max-w-xs">
             <CommentModal post={displayPost}>
@@ -147,7 +168,7 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
       </div>
 
       {/* The three-dots menu for Edit/Delete actions */}
-      {/* It will only render if the current user is the owner of the post */}
+      {/* It will only render if the current user is the owner and not in edit mode */}
       {!isRetweet && !isEditing && <PostActionsMenu post={post} onEdit={() => setIsEditing(true)} />}
     </div>
   );

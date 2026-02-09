@@ -23,14 +23,15 @@ export async function POST(request: Request) {
 
   try {
     await dbConnect();
-    const { content } = await request.json();
+    const { content, imageUrl } = await request.json();
 
-    if (!content || content.trim().length === 0) {
+    if ((!content || content.trim().length === 0) && !imageUrl) {
       return NextResponse.json({ error: 'Content cannot be empty.' }, { status: 400 });
     }
 
     const newPost = await Post.create({
-      content,
+      content: content || null,
+      image: imageUrl || null,
       author: session.user.id,
     });
     
