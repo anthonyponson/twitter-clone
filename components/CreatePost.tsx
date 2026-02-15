@@ -1,24 +1,44 @@
 // src/components/CreatePost.tsx
 "use client";
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ImageIcon, X } from 'lucide-react';
+import { ImageIcon, List, Smile, Calendar, MapPin, X } from 'lucide-react';
 import clsx from 'clsx';
-import { UploadDropzone } from "@uploadthing/react"; // <-- Import Dropzone
+import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
+
+// Generate the correctly typed hook outside of your component
+// This is the main fix for the errors you were seeing.
+const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 const CreatePost = ({ parentPostId }: { parentPostId?: string }) => {
   const { data: session } = useSession();
   const router = useRouter();
   const [content, setContent] = useState('');
-  const [imageUrl, setImageUrl] = useState<string | null>(null); // State for the image URL
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize the useUploadThing hook with your endpoint name and callbacks
+  const { startUpload, isUploading } = useUploadThing(
+    "postImageUploader",
+    {
+      onClientUploadComplete: (res) => {
+        if (res) {
+          setImageUrl(res[0].url);
+        }
+      },
+      onUploadError: (error: Error) => {
+        alert(`Upload Error: ${error.message}`);
+      },
+    }
+  );
 
   const handlePost = async () => {
-    // A post is valid if it has content or an image
     const isValidPost = content.trim() || imageUrl;
     if (!isValidPost || isSubmitting) return;
 
@@ -26,16 +46,14 @@ const CreatePost = ({ parentPostId }: { parentPostId?: string }) => {
     try {
       const endpoint = parentPostId ? `/api/posts/${parentPostId}/comment` : '/api/posts';
       
-      const response = await fetch(endpoint, {
+      await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, imageUrl }), // Send both content and image URL
+        body: JSON.stringify({ content, imageUrl }),
       });
 
-      if (!response.ok) throw new Error('Failed to post');
-
       setContent('');
-      setImageUrl(null); // Clear state on success
+      setImageUrl(null);
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -63,9 +81,7 @@ const CreatePost = ({ parentPostId }: { parentPostId?: string }) => {
           rows={2} maxLength={280}
         />
 
-        {/* --- IMAGE UPLOAD AND PREVIEW --- */}
-        {imageUrl ? (
-          // If an image is uploaded, show a preview with a remove button
+        {imageUrl && (
           <div className="relative mt-2">
             <Image src={imageUrl} alt="Uploaded preview" width={500} height={500} className="w-full h-auto rounded-xl"/>
             <button
@@ -75,31 +91,35 @@ const CreatePost = ({ parentPostId }: { parentPostId?: string }) => {
               <X size={18} />
             </button>
           </div>
-        ) : (
-          // If no image, show the upload dropzone
-          <div className="mt-2">
-            <UploadDropzone<OurFileRouter>
-              endpoint="postImageUploader"
-              onClientUploadComplete={(res) => {
-                if (res) {
-                  setImageUrl(res[0].url); // Save the URL to state
-                }
-              }}
-              onUploadError={(error: Error) => alert(`Upload Error: ${error.message}`)}
-              config={{
-                mode: "auto",
-              }}
-              appearance={{
-                container: "border-neutral-800 border-dashed ut-uploading:pointer-events-none",
-                label: "text-sky-500 hover:text-sky-600",
-                uploadIcon: { color: "#888" },
-              }}
-            />
-          </div>
         )}
-        {/* --- END IMAGE UPLOAD AND PREVIEW --- */}
         
-        <div className="mt-4 flex items-center justify-end">
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex gap-1">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={(e) => {
+                if (e.target.files) {
+                  startUpload(Array.from(e.target.files));
+                }
+              }} 
+              className="hidden"
+              accept="image/*"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading || !!imageUrl}
+              className="rounded-full p-2 text-sky-500 transition-colors duration-200 hover:bg-sky-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isUploading ? <div className="w-5 h-5 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" /> : <ImageIcon size={20} />}
+            </button>
+            
+            <button className="rounded-full p-2 text-sky-500 transition-colors duration-200 hover:bg-sky-500/10"><List size={20} /></button>
+            <button className="rounded-full p-2 text-sky-500 transition-colors duration-200 hover:bg-sky-500/10"><Smile size={20} /></button>
+            <button className="rounded-full p-2 text-sky-500 transition-colors duration-200 hover:bg-sky-500/10"><Calendar size={20} /></button>
+            <button className="rounded-full p-2 text-sky-500 transition-colors duration-200 hover:bg-sky-500/10"><MapPin size={20} /></button>
+          </div>
+          
           <button
             onClick={handlePost}
             disabled={(!content.trim() && !imageUrl) || isSubmitting}

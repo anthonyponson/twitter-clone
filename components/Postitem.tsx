@@ -9,7 +9,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { MessageCircle, Repeat, Share } from 'lucide-react';
 import clsx from 'clsx';
 import { mutate } from 'swr';
-import { HydratedIPost } from '@/app/model/Post'; // Using your corrected path
+import { HydratedIPost } from '@/app/model/Post';
 import { LikeButton } from './LikeButton';
 import { RepostButton } from './RepostButton';
 import { CommentModal } from './CommentModal';
@@ -111,8 +111,8 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
           </div>
         ) : (
           <div>
+            {/* Post Content */}
             <Link href={`/post/${displayPost._id}`} className="cursor-pointer">
-              {/* Render the post's own content (for normal posts and quote tweets) */}
               {post.content && (
                 <p className={clsx("mt-1 whitespace-pre-wrap", { "text-xl": isMainPost })}>
                   {post.content}
@@ -120,20 +120,20 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
               )}
             </Link>
             
-            {/* Render the post's image, if it has one */}
+            {/* Post Image */}
             {displayPost.image && (
-              <Link href={`/post/${displayPost._id}`} className="mt-2 block">
+              <Link href={`/post/${displayPost._id}`} className="mt-2 block cursor-pointer">
                 <Image
                   src={displayPost.image}
                   alt="Post image"
                   width={500}
                   height={500}
-                  className="w-full h-auto rounded-xl border border-neutral-800"
+                  className="w-full h-auto max-h-[500px] object-cover rounded-2xl border border-neutral-800"
                 />
               </Link>
             )}
 
-            {/* If it's a Quote Tweet, render the original post embedded inside */}
+            {/* Embedded Quote Tweet */}
             {post.originalPost && post.content && (
               <div className="mt-2 rounded-xl border border-neutral-800 hover:bg-neutral-900/50 transition-colors">
                 <PostItem post={post.originalPost} isEmbedded />
