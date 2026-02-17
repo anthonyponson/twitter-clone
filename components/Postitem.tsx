@@ -15,42 +15,30 @@ import { RepostButton } from './RepostButton';
 import { CommentModal } from './CommentModal';
 import { PostActionsMenu } from './PostActionMenu';
 
-// Define the complete props for this component
 interface PostItemProps {
   post: HydratedIPost;
-  isEmbedded?: boolean; // Is this post rendered inside another post (like a quote tweet)?
-  isMainPost?: boolean;  // Is this the main, focused post on a detail page?
+  isEmbedded?: boolean;
+  isMainPost?: boolean;
 }
 
 const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProps) => {
   const { data: session } = useSession();
-  
-  // State for managing edit mode
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post?.content || '');
 
-  // Defensive check: If the post or its author is missing, render nothing to prevent crashes.
-  if (!post || !post.author) {
-    return null; 
-  }
+  if (!post || !post.author) return null; 
 
-  // Determine post type and which post's data to display
   const isRetweet = post.originalPost && !post.content;
-  const displayPost = isRetweet ? post.originalPost : post;
+  const displayPost = isRetweet ? post.originalPost! : post;
 
-  // Another defensive check in case the originalPost data is malformed
-  if (!displayPost || !displayPost.author) {
-    return null;
-  }
+  if (!displayPost || !displayPost.author) return null;
   
-  // Calculate interaction states for the current user
   const hasLiked = session ? displayPost.likes.includes(session.user.id) : false;
   const hasReposted = session ? displayPost.repostedBy.includes(session.user.id) : false;
 
-  // Function to handle saving an edited post
   const handleSaveEdit = async () => {
     if (editedContent === post.content || !editedContent.trim()) {
-      return setIsEditing(false); // No changes made or content is empty
+      return setIsEditing(false);
     }
     await fetch(`/api/posts/${post._id}`, {
       method: 'PUT',
@@ -58,14 +46,11 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
       body: JSON.stringify({ content: editedContent }),
     });
     setIsEditing(false);
-    mutate('/api/posts'); // Revalidate the feed to show the updated post
+    mutate('/api/posts');
   };
 
   return (
-    <div className={clsx("relative flex gap-3 p-4", { // Added 'relative' for menu positioning
-      "border-b border-neutral-800": !isMainPost && !isEmbedded
-    })}>
-      {/* Avatar Section */}
+    <div className="relative flex gap-3 p-4 border-b border-neutral-800">
       <div className="flex flex-col items-end w-10 flex-shrink-0">
         {isRetweet && <Repeat size={14} className="text-neutral-500 mb-1" />}
         <Link href={`/profile/${displayPost.author?.name}`}>
@@ -77,7 +62,6 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
         </Link>
       </div>
       
-      {/* Main Content Section */}
       <div className="flex-1">
         {isRetweet && (
           <div className="mb-1 text-sm text-neutral-500 font-semibold">
@@ -94,15 +78,12 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
           </Link>
         </div>
           
-        {/* Conditional Rendering for Edit Mode vs. Display Mode */}
         {isEditing ? (
           <div className="mt-2">
             <textarea
-              value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
+              value={editedContent} onChange={(e) => setEditedContent(e.target.value)}
               className="w-full resize-none border border-neutral-700 bg-black p-2 text-white focus:border-sky-500 focus:outline-none rounded-md"
-              rows={4}
-              autoFocus
+              rows={4} autoFocus
             />
             <div className="mt-2 flex justify-end gap-2">
               <button onClick={() => setIsEditing(false)} className="px-4 py-1.5 text-sm font-bold rounded-full hover:bg-neutral-800">Cancel</button>
@@ -111,64 +92,45 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
           </div>
         ) : (
           <div>
-            {/* Post Content */}
             <Link href={`/post/${displayPost._id}`} className="cursor-pointer">
-              {post.content && (
-                <p className={clsx("mt-1 whitespace-pre-wrap", { "text-xl": isMainPost })}>
-                  {post.content}
-                </p>
-              )}
+              {post.content && <p className="mt-1 whitespace-pre-wrap">{post.content}</p>}
             </Link>
-            
-            {/* Post Image */}
             {displayPost.image && (
               <Link href={`/post/${displayPost._id}`} className="mt-2 block cursor-pointer">
                 <Image
-                  src={displayPost.image}
-                  alt="Post image"
-                  width={500}
-                  height={500}
+                  src={displayPost.image} alt="Post image" width={500} height={500}
                   className="w-full h-auto max-h-[500px] object-cover rounded-2xl border border-neutral-800"
                 />
               </Link>
             )}
-
-            {/* Embedded Quote Tweet */}
             {post.originalPost && post.content && (
-              <div className="mt-2 rounded-xl border border-neutral-800 hover:bg-neutral-900/50 transition-colors">
+              <div className="mt-2 rounded-xl border border-neutral-800 hover:bg-neutral-900/50">
                 <PostItem post={post.originalPost} isEmbedded />
               </div>
             )}
           </div>
         )}
         
-        {/* Action Buttons: Only show if not an embedded post and not in edit mode */}
         {!isEmbedded && !isEditing && (
           <div className="mt-3 flex items-center justify-between text-neutral-500 max-w-xs">
             <CommentModal post={displayPost}>
               <button className="group flex items-center gap-2">
                 <MessageCircle size={18} className="transition-colors group-hover:text-sky-500"/>
-                <span className="text-sm transition-colors group-hover:text-sky-500">{displayPost.comments.length}</span>
+                <span className="text-sm">{displayPost.comments.length}</span>
               </button>
             </CommentModal>
-
             <RepostButton post={displayPost} hasReposted={hasReposted} />
-
             <LikeButton 
-              postId={displayPost._id}
-              initialLikes={displayPost.likes}
-              initialHasLiked={hasLiked}
+              postId={displayPost._id} initialLikes={displayPost.likes} initialHasLiked={hasLiked}
             />
-            
-            <button className="group">
-              <Share size={18} className="transition-colors group-hover:text-sky-500" />
-            </button>
+            <button className="group"><Share size={18} /></button>
           </div>
         )}
       </div>
 
-      {/* The three-dots menu for Edit/Delete actions */}
-      {/* It will only render if the current user is the owner and not in edit mode */}
+      {/* --- THIS IS THE CHANGE --- */}
+      {/* The menu is now always rendered here (unless it's a retweet or in edit mode) */}
+      {/* It will decide internally whether to show up and what options to display. */}
       {!isRetweet && !isEditing && <PostActionsMenu post={post} onEdit={() => setIsEditing(true)} />}
     </div>
   );
