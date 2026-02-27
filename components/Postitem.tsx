@@ -50,7 +50,9 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
   };
 
   return (
-    <div className="relative flex gap-3 p-4 border-b border-neutral-800">
+    <div className={clsx("relative flex gap-3 p-4", {
+      "border-b border-neutral-800": !isMainPost && !isEmbedded
+    })}>
       <div className="flex flex-col items-end w-10 flex-shrink-0">
         {isRetweet && <Repeat size={14} className="text-neutral-500 mb-1" />}
         <Link href={`/profile/${displayPost.author?.name}`}>
@@ -128,10 +130,8 @@ const PostItem = ({ post, isEmbedded = false, isMainPost = false }: PostItemProp
         )}
       </div>
 
-      {/* --- THIS IS THE CHANGE --- */}
-      {/* The menu is now always rendered here (unless it's a retweet or in edit mode) */}
-      {/* It will decide internally whether to show up and what options to display. */}
-      {!isRetweet && !isEditing && <PostActionsMenu post={post} onEdit={() => setIsEditing(true)} />}
+      {/* The `!isRetweet` check is removed here to allow the menu on your own retweets */}
+      {!isEditing && !isEmbedded && <PostActionsMenu post={post} onEdit={() => setIsEditing(true)} />}
     </div>
   );
 };

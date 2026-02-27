@@ -9,6 +9,7 @@ import { ImageIcon, List, Smile, Calendar, MapPin, X } from 'lucide-react';
 import clsx from 'clsx';
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
+import { mutate } from 'swr';
 
 // Generate the correctly typed hook outside of your component
 // This is the main fix for the errors you were seeing.
@@ -54,7 +55,7 @@ const CreatePost = ({ parentPostId }: { parentPostId?: string }) => {
 
       setContent('');
       setImageUrl(null);
-      router.refresh();
+      mutate('/api/posts');
     } catch (error) {
       console.error(error);
       alert((error as Error).message);
