@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../auth/[...nextauth]/route';
-import dbConnect from '@app/lib/mongoose';
+import dbConnect from '@/app/lib/mongoose';
 import Post from '@/app/model/Post';
 import User from '@/app/model/User';
 

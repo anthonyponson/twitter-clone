@@ -3,8 +3,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
-import dbConnect from '@app/lib/mongoose';
-import User from '@app/model/User';
+import dbConnect from '@/app/lib/mongoose';
+import User from '@/app/model/User';
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);

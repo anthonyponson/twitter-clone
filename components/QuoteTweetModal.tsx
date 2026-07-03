@@ -7,7 +7,7 @@ import Image from 'next/image';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { mutate } from 'swr';
-import { HydratedIPost } from '@app/model/Post';
+import { HydratedIPost } from '@/app/model/Post';
 import PostItem from './Postitem'; // We'll reuse this to show the embedded post
 
 interface QuoteTweetModalProps {

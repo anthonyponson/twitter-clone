@@ -5,8 +5,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { UploadButton } from "@uploadthing/react";
-import type { OurFileRouter } from "../api/uploadthing/core";
+import { UploadButton } from "@/utils/uploadthing";
 
 export default function ProfilePage() {
   const { data: session, status, update: updateSession } = useSession();
@@ -44,7 +43,7 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center gap-2">
             <p className="font-semibold text-neutral-400">Upload a New Picture</p>
 
-            <UploadButton<OurFileRouter>
+            <UploadButton
               
               endpoint="profilePictureUploader"
               onClientUploadComplete={async (res) => {

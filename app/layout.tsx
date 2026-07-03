@@ -2,8 +2,6 @@
 
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import './globals.css';
-
 import Sidebar from '@/components/Sidebar';
 import Widgets from '@/components/Widgets';
 import AuthProvider from '@/components/AuthProvider';

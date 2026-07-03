@@ -2,7 +2,7 @@
 "use client";
 
 import useSWR, { KeyedMutator } from 'swr';
-import { HydratedIPost } from '@app/model/Post';
+import { HydratedIPost } from '@/app/model/Post';
 
 // The fetcher function
 const fetcher = (url: string) => fetch(url).then(res => res.json());

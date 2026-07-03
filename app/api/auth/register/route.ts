@@ -1,8 +1,8 @@
 // src/app/api/auth/register/route.ts
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import dbConnect from '@app/lib/mongoose'; // <-- IMPORT THE NEW HELPER
-import User from '@app/model/User';
+import dbConnect from '@/app/lib/mongoose'; // <-- IMPORT THE NEW HELPER
+import User from '@/app/model/User';
 
 export async function POST(request: Request) {
   try {

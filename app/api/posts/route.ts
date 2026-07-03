@@ -3,8 +3,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]/route';
-import dbConnect from '@app/lib/mongoose';
-import Post from '@app/model/Post'; // Using your corrected path
+import dbConnect from '@/app/lib/mongoose';
+import Post from '@/app/model/Post'; // Using your corrected path
 
 // ============ THE FIX IS HERE ============
 // Import the User model to make it available for Mongoose's populate method.

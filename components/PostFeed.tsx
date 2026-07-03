@@ -2,7 +2,7 @@
 "use client";
 
 import useSWR from 'swr';
-import { HydratedIPost } from '@app/model/Post';
+import { HydratedIPost } from '@/app/model/Post';
 import PostItem from './Postitem';
 
 // Define a fetcher function for SWR

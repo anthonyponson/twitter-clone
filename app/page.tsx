@@ -1,4 +1,4 @@
-import HomeFeed from "@components/HomeFeed";
+import HomeFeed from "@/components/HomeFeed";
 
 export default function Home() {
   return (

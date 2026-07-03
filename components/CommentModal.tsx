@@ -7,7 +7,7 @@ import Image from 'next/image';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { mutate } from 'swr';
-import { HydratedIPost } from '@app/model/Post';
+import { HydratedIPost } from '@/app/model/Post';
 
 interface CommentModalProps {
   post: HydratedIPost;
