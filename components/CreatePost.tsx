@@ -70,13 +70,11 @@ const CreatePost = ({ parentPostId }: { parentPostId?: string }) => {
       <>
         {console.log("CreatePostaa image:", session?.user?.image)}
 
-        <Image
-          src={session?.user?.image || "/default-avatar.png"}
-          alt="User avatar"
-          width={40}
-          height={40}
-          className="h-10 w-10 rounded-full object-cover"
-        />
+        <img
+  src={session.user?.image || "/default-avatar.png"}
+  alt="User avatar"
+  className="h-10 w-10 rounded-full object-cover"
+/>
       </>
       <div className="flex-1">
         <textarea
