@@ -69,10 +69,12 @@ const CreatePost = ({ parentPostId }: { parentPostId?: string }) => {
   return (
     <div className="flex gap-4 border-b border-neutral-800 p-4">
       <Image
-        src={session.user?.image || '/default-avatar.png'}
-        alt="User avatar"
-        width={40} height={40} className="h-10 w-10 rounded-full"
-      />
+  src={session.user?.image || '/default-avatar.png'}
+  alt="User avatar"
+  width={40}
+  height={40}
+  className="h-10 w-10 rounded-full"
+/>
       <div className="flex-1">
         <textarea
           value={content}
